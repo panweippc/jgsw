@@ -590,3 +590,175 @@ INSERT IGNORE INTO material_outbound (id, outbound_no, material_id, warehouse_id
 -- 初始化领用申请
 INSERT IGNORE INTO material_apply (id, apply_no, material_id, quantity, purpose, apply_dept, apply_id, apply_name, status, approve_id, approve_name, approve_time) VALUES
 (1, 'SQ-20260702-001', 2, 50, '办公室日常使用', '综合科', 2, '普通用户', 3, 1, '系统管理员', NOW());
+
+-- ----------------------------
+-- 派车管理模块表结构
+-- ----------------------------
+
+-- 车辆信息表
+CREATE TABLE IF NOT EXISTS vehicle (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '车辆ID',
+    plate_number VARCHAR(20) NOT NULL COMMENT '车牌号',
+    vehicle_type VARCHAR(50) COMMENT '车辆类型: 轿车, SUV, 商务车, 货车等',
+    brand VARCHAR(50) COMMENT '品牌',
+    model VARCHAR(100) COMMENT '车型',
+    color VARCHAR(30) COMMENT '颜色',
+    seat_count INT DEFAULT 5 COMMENT '座位数',
+    purchase_date DATE COMMENT '购置日期',
+    mileage DECIMAL(10,2) DEFAULT 0 COMMENT '当前里程(公里)',
+    fuel_type VARCHAR(20) COMMENT '燃油类型: 汽油, 柴油, 混动, 电动',
+    engine_no VARCHAR(50) COMMENT '发动机号',
+    vin VARCHAR(50) COMMENT '车架号',
+    insurance_expire DATE COMMENT '保险到期日',
+    inspection_expire DATE COMMENT '年检到期日',
+    status TINYINT DEFAULT 1 COMMENT '状态: 0-停用, 1-在用, 2-维修中, 3-已报废',
+    remark VARCHAR(500) COMMENT '备注',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_plate_number (plate_number),
+    KEY idx_status (status),
+    KEY idx_vehicle_type (vehicle_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='车辆信息表';
+
+-- 驾驶员信息表
+CREATE TABLE IF NOT EXISTS driver (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '驾驶员ID',
+    driver_name VARCHAR(50) NOT NULL COMMENT '姓名',
+    phone VARCHAR(20) COMMENT '手机号',
+    driver_license VARCHAR(20) NOT NULL COMMENT '驾驶证号',
+    license_type VARCHAR(10) COMMENT '准驾车型: C1, C2, B1, B2, A1, A2等',
+    license_expire DATE COMMENT '驾驶证到期日',
+    hire_date DATE COMMENT '入职日期',
+    department VARCHAR(100) COMMENT '所属部门',
+    status TINYINT DEFAULT 1 COMMENT '状态: 0-停用, 1-在职, 2-离职',
+    remark VARCHAR(500) COMMENT '备注',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_driver_license (driver_license),
+    KEY idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='驾驶员信息表';
+
+-- 派车单表
+CREATE TABLE IF NOT EXISTS dispatch_order (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '派车单ID',
+    order_no VARCHAR(50) NOT NULL COMMENT '派车单号',
+    vehicle_id BIGINT NOT NULL COMMENT '车辆ID',
+    driver_id BIGINT NOT NULL COMMENT '驾驶员ID',
+    applicant_id BIGINT COMMENT '申请人ID',
+    applicant_name VARCHAR(50) COMMENT '申请人姓名',
+    apply_dept VARCHAR(100) COMMENT '申请部门',
+    start_place VARCHAR(200) NOT NULL COMMENT '出发地点',
+    end_place VARCHAR(200) NOT NULL COMMENT '目的地',
+    use_date DATE NOT NULL COMMENT '用车日期',
+    start_time TIME COMMENT '出发时间',
+    end_time TIME COMMENT '预计返回时间',
+    purpose VARCHAR(500) COMMENT '用车事由',
+    passenger_count INT DEFAULT 1 COMMENT '乘车人数',
+    status TINYINT DEFAULT 0 COMMENT '状态: 0-待审批, 1-已批准, 2-已拒绝, 3-已派车, 4-已完成, 5-已取消',
+    approve_id BIGINT COMMENT '审批人ID',
+    approve_name VARCHAR(50) COMMENT '审批人姓名',
+    approve_time DATETIME COMMENT '审批时间',
+    approve_remark VARCHAR(500) COMMENT '审批意见',
+    actual_mileage DECIMAL(10,2) COMMENT '实际里程(公里)',
+    remark VARCHAR(500) COMMENT '备注',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_order_no (order_no),
+    KEY idx_vehicle_id (vehicle_id),
+    KEY idx_driver_id (driver_id),
+    KEY idx_status (status),
+    KEY idx_use_date (use_date),
+    KEY idx_create_time (create_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='派车单表';
+
+-- 派车管理模块权限
+INSERT IGNORE INTO sys_permission (id, parent_id, permission_name, permission_code, permission_type, menu_path, icon, sort_order, status) VALUES
+(93, 0, '派车管理', 'dispatch', 1, '', 'dispatch', 3, 1),
+(94, 93, '车辆信息', 'dispatch:vehicle', 2, '/dispatch/vehicle', 'vehicle', 1, 1),
+(95, 94, '新增车辆', 'dispatch:vehicle:add', 3, '', '', 1, 1),
+(96, 94, '编辑车辆', 'dispatch:vehicle:edit', 3, '', '', 2, 1),
+(97, 94, '删除车辆', 'dispatch:vehicle:delete', 3, '', '', 3, 1),
+(98, 94, '查看车辆', 'dispatch:vehicle:view', 3, '', '', 4, 1),
+(99, 94, '导出车辆', 'dispatch:vehicle:export', 3, '', '', 5, 1),
+(100, 93, '驾驶员信息', 'dispatch:driver', 2, '/dispatch/driver', 'driver', 2, 1),
+(101, 100, '新增驾驶员', 'dispatch:driver:add', 3, '', '', 1, 1),
+(102, 100, '编辑驾驶员', 'dispatch:driver:edit', 3, '', '', 2, 1),
+(103, 100, '删除驾驶员', 'dispatch:driver:delete', 3, '', '', 3, 1),
+(104, 100, '查看驾驶员', 'dispatch:driver:view', 3, '', '', 4, 1),
+(105, 100, '导出驾驶员', 'dispatch:driver:export', 3, '', '', 5, 1),
+(106, 93, '派车单管理', 'dispatch:order', 2, '/dispatch/order', 'order', 3, 1),
+(107, 106, '新增派车单', 'dispatch:order:add', 3, '', '', 1, 1),
+(108, 106, '编辑派车单', 'dispatch:order:edit', 3, '', '', 2, 1),
+(109, 106, '删除派车单', 'dispatch:order:delete', 3, '', '', 3, 1),
+(110, 106, '查看派车单', 'dispatch:order:view', 3, '', '', 4, 1),
+(111, 106, '审批派车单', 'dispatch:order:approve', 3, '', '', 5, 1),
+(112, 106, '导出派车单', 'dispatch:order:export', 3, '', '', 6, 1);
+
+-- 同步管理员角色权限
+INSERT IGNORE INTO sys_role_permission (role_id, permission_id) SELECT 1, id FROM sys_permission WHERE status = 1 AND permission_code LIKE 'dispatch%';
+
+-- 派车管理数据字典类型
+INSERT IGNORE INTO sys_dict_type (id, dict_type_code, dict_type_name, description, sort_order, status) VALUES
+(7, 'vehicle_type', '车辆类型', '车辆类型枚举', 7, 1),
+(8, 'vehicle_status', '车辆状态', '车辆状态枚举', 8, 1),
+(9, 'fuel_type', '燃油类型', '燃油类型枚举', 9, 1),
+(10, 'license_type', '准驾车型', '驾驶证准驾车型', 10, 1),
+(11, 'driver_status', '驾驶员状态', '驾驶员状态枚举', 11, 1),
+(12, 'dispatch_status', '派车单状态', '派车单状态枚举', 12, 1);
+
+-- 派车管理数据字典项
+INSERT IGNORE INTO sys_dict_item (id, dict_type_id, dict_value, dict_label, sort_order, status) VALUES
+(23, 7, '轿车', '轿车', 1, 1),
+(24, 7, 'SUV', 'SUV', 2, 1),
+(25, 7, '商务车', '商务车', 3, 1),
+(26, 7, '货车', '货车', 4, 1),
+(27, 7, '面包车', '面包车', 5, 1),
+(28, 7, '客车', '客车', 6, 1),
+(29, 8, '0', '停用', 1, 1),
+(30, 8, '1', '在用', 2, 1),
+(31, 8, '2', '维修中', 3, 1),
+(32, 8, '3', '已报废', 4, 1),
+(33, 9, '汽油', '汽油', 1, 1),
+(34, 9, '柴油', '柴油', 2, 1),
+(35, 9, '混动', '混动', 3, 1),
+(36, 9, '电动', '电动', 4, 1),
+(37, 10, 'C1', 'C1', 1, 1),
+(38, 10, 'C2', 'C2', 2, 1),
+(39, 10, 'B1', 'B1', 3, 1),
+(40, 10, 'B2', 'B2', 4, 1),
+(41, 10, 'A1', 'A1', 5, 1),
+(42, 10, 'A2', 'A2', 6, 1),
+(43, 11, '0', '停用', 1, 1),
+(44, 11, '1', '在职', 2, 1),
+(45, 11, '2', '离职', 3, 1),
+(46, 12, '0', '待审批', 1, 1),
+(47, 12, '1', '已批准', 2, 1),
+(48, 12, '2', '已拒绝', 3, 1),
+(49, 12, '3', '已派车', 4, 1),
+(50, 12, '4', '已完成', 5, 1),
+(51, 12, '5', '已取消', 6, 1);
+
+-- 初始化车辆数据
+INSERT IGNORE INTO vehicle (id, plate_number, vehicle_type, brand, model, color, seat_count, purchase_date, mileage, fuel_type, engine_no, vin, insurance_expire, inspection_expire, status, remark) VALUES
+(1, '京A12345', '轿车', '奥迪', 'A6L', '黑色', 5, '2024-01-15', 15000.00, '汽油', 'ENG2024001', 'VIN2024001', '2026-01-15', '2026-01-15', 1, '领导用车'),
+(2, '京B67890', '商务车', '别克', 'GL8', '白色', 7, '2023-06-20', 25000.00, '汽油', 'ENG2023002', 'VIN2023002', '2025-06-20', '2025-06-20', 1, '公务接待'),
+(3, '京C11111', 'SUV', '丰田', '汉兰达', '银色', 7, '2022-03-10', 45000.00, '汽油', 'ENG2022003', 'VIN2022003', '2025-03-10', '2025-03-10', 1, '综合用车'),
+(4, '京D22222', '轿车', '大众', '帕萨特', '黑色', 5, '2021-09-05', 60000.00, '汽油', 'ENG2021004', 'VIN2021004', '2024-09-05', '2024-09-05', 2, '维修中'),
+(5, '京E33333', '面包车', '五菱', '宏光', '白色', 7, '2020-11-20', 80000.00, '汽油', 'ENG2020005', 'VIN2020005', '2024-11-20', '2024-11-20', 1, '日常配送');
+
+-- 初始化驾驶员数据
+INSERT IGNORE INTO driver (id, driver_name, phone, driver_license, license_type, license_expire, hire_date, department, status, remark) VALUES
+(1, '张三', '13900139001', '110101198001011234', 'A1', '2028-06-15', '2018-06-15', '后勤保障科', 1, '资深驾驶员'),
+(2, '李四', '13900139002', '110101198505055678', 'C1', '2029-03-20', '2020-03-20', '后勤保障科', 1, '专职驾驶员'),
+(3, '王五', '13900139003', '110101199008089012', 'B2', '2027-11-10', '2021-11-10', '后勤保障科', 1, '货车驾驶员'),
+(4, '赵六', '13900139004', '110101199212123456', 'C1', '2028-09-05', '2022-09-05', '综合科', 0, '待培训'),
+(5, '孙七', '13900139005', '110101198804047890', 'C1', '2026-07-15', '2019-07-15', '后勤保障科', 2, '已离职');
+
+-- 初始化派车单数据
+INSERT IGNORE INTO dispatch_order (id, order_no, vehicle_id, driver_id, applicant_id, applicant_name, apply_dept, start_place, end_place, use_date, start_time, end_time, purpose, passenger_count, status, approve_id, approve_name, approve_time, actual_mileage, remark) VALUES
+(1, 'PC-20260703-001', 1, 1, 1, '系统管理员', '综合科', '机关事务办公室', '市政府大楼', '2026-07-03', '09:00:00', '17:00:00', '参加市政府会议', 4, 4, 1, '系统管理员', NOW(), 45.50, '会议已完成'),
+(2, 'PC-20260703-002', 2, 2, 2, '普通用户', '物资管理科', '机关事务办公室', '火车站', '2026-07-03', '14:00:00', '16:00:00', '接待来访人员', 6, 1, 1, '系统管理员', NOW(), NULL, '等待出发'),
+(3, 'PC-20260704-001', 3, 2, 2, '普通用户', '财务科', '机关事务办公室', '税务局', '2026-07-04', '09:00:00', '11:00:00', '办理税务申报', 3, 0, NULL, NULL, NULL, NULL, NULL);

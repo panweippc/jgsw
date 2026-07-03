@@ -35,6 +35,16 @@ const menuItems = [
       { name: 'apply', label: '领用申请', path: '/material/apply' },
       { name: 'stock', label: '库存查询', path: '/material/stock' }
     ]
+  },
+  {
+    name: 'dispatch',
+    label: '派车管理',
+    icon: 'Car',
+    children: [
+      { name: 'vehicle', label: '车辆信息', path: '/dispatch/vehicle' },
+      { name: 'driver', label: '驾驶员信息', path: '/dispatch/driver' },
+      { name: 'order', label: '派车单管理', path: '/dispatch/order' }
+    ]
   }
 ]
 

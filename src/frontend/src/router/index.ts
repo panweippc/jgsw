@@ -97,6 +97,31 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/material/Stock.vue')
       }
     ]
+  },
+  {
+    path: '/dispatch',
+    name: 'Dispatch',
+    meta: { title: '派车管理' },
+    children: [
+      {
+        path: 'vehicle',
+        name: 'Vehicle',
+        meta: { title: '车辆信息' },
+        component: () => import('@/views/dispatch/Vehicle.vue')
+      },
+      {
+        path: 'driver',
+        name: 'Driver',
+        meta: { title: '驾驶员信息' },
+        component: () => import('@/views/dispatch/Driver.vue')
+      },
+      {
+        path: 'order',
+        name: 'DispatchOrder',
+        meta: { title: '派车单管理' },
+        component: () => import('@/views/dispatch/DispatchOrder.vue')
+      }
+    ]
   }
 ]
 
