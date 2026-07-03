@@ -1,0 +1,1 @@
+import{s}from"./request-DbqP6Z9A.js";function n(t,e,o){return s.get("/system/post",{params:{page:t,size:e,postName:o}})}function u(t){return s.post("/system/post",t)}function a(t,e){return s.put(`/system/post/${t}`,e)}function p(t){return s.delete(`/system/post/${t}`)}function c(){return s.get("/system/post/all")}export{n as a,u as c,p as d,c as g,a as u};

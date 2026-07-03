@@ -1,0 +1,1 @@
+import{s}from"./request-DbqP6Z9A.js";function i(){return s.get("/system/permission/tree")}function n(e){return s.post("/system/permission",e)}function o(e,r){return s.put(`/system/permission/${e}`,r)}function m(e){return s.delete(`/system/permission/${e}`)}export{n as c,m as d,i as g,o as u};

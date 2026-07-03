@@ -1,0 +1,1 @@
+import{s as t}from"./request-DbqP6Z9A.js";function p(){return t.get("/system/dept")}function n(e){return t.post("/system/dept",e)}function u(e,s){return t.put(`/system/dept/${e}`,s)}function d(e){return t.delete(`/system/dept/${e}`)}export{n as c,d,p as g,u};

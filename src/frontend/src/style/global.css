@@ -1,0 +1,9 @@
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-buttons > :deep(.el-button) {
+  flex-shrink: 0;
+}
